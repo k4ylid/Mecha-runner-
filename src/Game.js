@@ -16,6 +16,8 @@ import { Audio } from './audio/Audio.js';
 import { HUD } from './ui/HUD.js';
 import { Menus } from './ui/Menus.js';
 
+const _NIGHT_FOG = new THREE.Color(0x0c1524);
+
 const MISSION_POOL = [
   { id: 'd400', name: 'RUN 400m IN ONE RUN', key: 'distance', target: 400 },
   { id: 'd1000', name: 'RUN 1,000m IN ONE RUN', key: 'distance', target: 1000 },
