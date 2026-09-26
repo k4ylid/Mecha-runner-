@@ -30,4 +30,17 @@ npm run assets   # regenerate public/assets/*.glb via tools/build_assets.mjs
 Touch: tap right = jump, tap left = slide, swipe down = fast-fall.
 
 See `docs/RESEARCH.md` for the genre research and quality criteria driving
-the design.
+the design, and `docs/PROVENANCE.md` for the asset provenance record
+(every asset is generated in-repo — zero licensing surface).
+
+### QA hooks
+
+- `?q=low|med|high` — force a quality tier; `?px=0.4` — cap pixel ratio
+  (useful for software-GL testing)
+- `window.__game` — the live `Game` instance
+- `game.step(n, dt)` — fast-forward n sim frames then render once
+  (headless-friendly; keep n ≤ 8000 per call to avoid watchdogs)
+- `game.autopilot = true` after `startRun()` — self-playing bot used for
+  fairness/balance simulation (`game.lastDeath` records the last death
+  context)
+- `game.setQuality('low'|'med'|'high')` — live quality switch
