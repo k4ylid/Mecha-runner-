@@ -372,8 +372,9 @@ export class Game {
     if (nearest) {
       const jumpDist = speed * 0.58 + 1.2;
       const t = nearest.type;
-      const slideTypes = ['beam', 'laserLow', 'droneHigh'];
-      const jumpTypes = ['barrier', 'laserHigh', 'droneLow', 'block'];
+      // laserLow beam spans 0.55–2.45 — too low to slide under (slide top=1.05), jump it
+      const slideTypes = ['beam', 'droneHigh'];
+      const jumpTypes = ['barrier', 'laserHigh', 'laserLow', 'droneLow', 'block'];
       if (slideTypes.includes(t) && nearestD < speed * 0.5 + 1.5) a.autoSlide = true;
       if (jumpTypes.includes(t) && nearestD < jumpDist) {
         a.autoJump = true;

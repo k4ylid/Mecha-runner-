@@ -12,6 +12,7 @@ document.getElementById('app').appendChild(renderer.domElement);
 
 const game = new Game(renderer);
 window.__game = game; // testing hook — see .agents/skills
+document.addEventListener('visibilitychange', () => { if (document.hidden) game.pause(); });
 
 const clock = new THREE.Clock();
 let time = 0;
