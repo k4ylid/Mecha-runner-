@@ -404,7 +404,7 @@ export class Game {
   // ------------------------- per-frame -------------------------------------
   update(dt, time) {
     const st = this.state;
-    this.post.update(dt);
+    this.post.update(dt, this.speed / SPEED.max);
 
     // global input
     if (this.input.justPressed('pause')) {

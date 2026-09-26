@@ -93,6 +93,8 @@ export class Post {
     this.composer.addPass(this.bloom);
 
     this.grade = new ShaderPass(GradeShader);
+    this._caBase = 0.0016;
+    this._vigBase = 0.32;
     this.composer.addPass(this.grade);
     this.composer.addPass(new OutputPass());
 
