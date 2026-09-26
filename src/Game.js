@@ -610,6 +610,10 @@ export class Game {
   }
 
   render() {
+    // composer fans out into several passes — accumulate draw calls across all of them
+    const info = this.renderer.info;
+    info.autoReset = false;
+    info.reset();
     this.post.render();
   }
 
