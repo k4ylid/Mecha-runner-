@@ -152,6 +152,11 @@ export class City {
     );
     this.foreCursor = 30;
 
+    // overhead gantries — cross the top of frame close to camera, sell the speed
+    const gantGeo = new THREE.BoxGeometry(0.7, 0.7, 30);
+    this.gantries = new InstLayer(this.group, gantGeo, this.propDark, 5, 1.35);
+    this.gantryCursor = 140;
+
     // ---------- aviation strobes on mid towers (pooled Points) ----------
     this.beaconCap = Math.ceil(28 * d);
     this.beacons = []; // {x,y,z,phase}
