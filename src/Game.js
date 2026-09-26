@@ -234,6 +234,7 @@ export class Game {
     this.nextMilestone = SCORE.milestoneEvery;
     this._deathSlowmo = 1;
     this._pulse = 1; // near-miss time dip
+    this._beatBest = false;
     this.power = { shield: 0, magnet: 0, surge: 0, jet: 0 };
     this.hud.setDanger(false);
     this.missionList = this._buildMissions();
@@ -436,6 +437,12 @@ export class Game {
           this.combo = 1;
         }
         for (const k of Object.keys(this.power)) this.power[k] = Math.max(0, this.power[k] - dt);
+        // crossing the personal best mid-run — one flash, then silence
+        if (!this._beatBest && this.storage.bestScore > 0 && this.score > this.storage.bestScore) {
+          this._beatBest = true;
+          this.hud.announce('NEW BEST', `${this.storage.bestScore.toLocaleString()} surpassed`, 2);
+          this.audio.milestone();
+        }
         if (this.distance >= this.nextMilestone) {
           this.hud.announce(`${this.nextMilestone}m`, `+${SCORE.milestone} BONUS`, 1.4);
           this._addScore(SCORE.milestone);
