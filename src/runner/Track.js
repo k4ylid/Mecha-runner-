@@ -62,8 +62,8 @@ function makeBarrierMesh(m) {
 function makeLaserMesh(m, high) {
   // two emitter posts + a crackling beam sheet
   const g = new THREE.Group();
-  const y0 = high ? 0 : 0.55;
-  const y1 = high ? 1.15 : 2.45;
+  const y0 = high ? 0 : 1.22;
+  const y1 = high ? 1.15 : 2.6;
   const postGeo = new THREE.CylinderGeometry(0.09, 0.12, y1 + 0.3, 8);
   const postL = new THREE.Mesh(postGeo, m.barrierPost);
   postL.position.set(-0.4, (y1 + 0.3) / 2, 0);
@@ -382,7 +382,7 @@ export class Track {
       // hitboxes in local coords (from floor beneath the obstacle)
       if (type === 'barrier') Object.assign(o, { hitW: 0.62, hitY0: 0, hitY1: 1.18 });
       if (type === 'laserHigh') Object.assign(o, { hitW: 0.75, hitY0: 0.15, hitY1: 1.15 });
-      if (type === 'laserLow') Object.assign(o, { hitW: 0.75, hitY0: 0.55, hitY1: 2.45 });
+      if (type === 'laserLow') Object.assign(o, { hitW: 0.75, hitY0: 1.25, hitY1: 2.5 }); // slidable — bottom gap > slide capsule (1.05)
       if (type === 'block') Object.assign(o, { hitW: 1.65, hitY0: 0, hitY1: 2.72 });
       if (type === 'beam') Object.assign(o, { hitW: 2.6, hitY0: 1.42, hitY1: 3.3 });
       if (type === 'droneHigh') Object.assign(o, { hitW: 1.1, hitY0: 1.35, hitY1: 2.5 });

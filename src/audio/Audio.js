@@ -147,6 +147,14 @@ export class Audio {
     this._osc('sine', f * 2, t, 0.18, 0.05);
   }
 
+  // falling alarm: urgent low pulse — played while the player is below deck
+  fallAlarm() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this._osc('sine', 190, t, 0.3, 0.12).frequency.exponentialRampToValueAtTime(95, t + 0.28);
+    this._noise(t, 0.25, 0.06, { type: 'lowpass', freq: 500 });
+  }
+
   nearMiss() {
     if (!this.ctx) return;
     this._noise(this.ctx.currentTime, 0.22, 0.1, { type: 'bandpass', freq: 3000, sweepTo: 1200, q: 2.5 });

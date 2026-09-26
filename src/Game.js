@@ -373,9 +373,9 @@ export class Game {
     if (nearest) {
       const jumpDist = speed * 0.58 + 1.2;
       const t = nearest.type;
-      // laserLow beam spans 0.55–2.45 — too low to slide under (slide top=1.05), jump it
-      const slideTypes = ['beam', 'droneHigh'];
-      const jumpTypes = ['barrier', 'laserHigh', 'laserLow', 'droneLow', 'block'];
+      // laserLow beam now spans 1.22–2.6 — slidable. laserHigh hugs the deck — jump it.
+      const slideTypes = ['beam', 'laserLow', 'droneHigh'];
+      const jumpTypes = ['barrier', 'laserHigh', 'droneLow', 'block'];
       if (slideTypes.includes(t) && nearestD < speed * 0.5 + 1.5) a.autoSlide = true;
       if (jumpTypes.includes(t) && nearestD < jumpDist) {
         a.autoJump = true;
@@ -557,7 +557,13 @@ export class Game {
         const t = this.combo >= 8 ? [0.85, 0.5, 1] : this.combo >= 4 ? [1, 0.75, 0.2] : null;
         this.particles.jetFlare(PLAYER_X - 0.4, this.player.y + 0.9, t); // exhaust shifts gold→violet with combo
       }
-      this.hud.setDanger(this.player.y < -2);
+      const inDanger = this.player.y < -2;
+      this.hud.setDanger(inDanger);
+      if (inDanger) {
+        this._alarmT = (this._alarmT || 0) - dt;
+        if (this._alarmT <= 0) { this.audio.fallAlarm(); this._alarmT = 0.55; }
+        this.post.dangerPulse(0.4);
+      } else this._alarmT = 0;
     }
 
     if (st === 'running') this.hud.update(dt, this);
