@@ -32,12 +32,13 @@ export class Sky {
       depthWrite: false,
       fog: false,
       uniforms: {
-        top: { value: PALETTE.skyTop },
-        mid: { value: PALETTE.skyMid },
-        horizon: { value: PALETTE.horizon },
+        // cloned — update() lerps these toward night targets; PALETTE must stay pristine
+        top: { value: PALETTE.skyTop.clone() },
+        mid: { value: PALETTE.skyMid.clone() },
+        horizon: { value: PALETTE.horizon.clone() },
         sunDir: { value: new THREE.Vector3(0.5, 0.24, -0.83).normalize() },
-        sunCore: { value: PALETTE.sunCore },
-        sunGlow: { value: PALETTE.sunGlow },
+        sunCore: { value: PALETTE.sunCore.clone() },
+        sunGlow: { value: PALETTE.sunGlow.clone() },
         time: { value: 0 },
       },
       vertexShader: /* glsl */ `
@@ -129,7 +130,8 @@ export class Sky {
     u.horizon.value.copy(PALETTE.horizon).lerp(this._nightHorizon, nightT * 0.6);
     u.mid.value.copy(PALETTE.skyMid).lerp(this._nightMid, nightT * 0.45);
     u.top.value.copy(PALETTE.skyTop).lerp(this._nightTop, nightT * 0.5);
-    u.sunGlow.value.copy(PALETTE.sunGlow).multiplyScalar(1 - nightT * 0.55);
+    u.sunGlow.value.copy(PALETTE.sunGlow); // already scaled per frame
+    u.sunGlow.value.multiplyScalar(1 - nightT * 0.55);
     for (const c of this.clouds) {
       c.position.x -= c.userData.drift * dt * 0.35;
       if (c.position.x < -240) c.position.x += 480;
