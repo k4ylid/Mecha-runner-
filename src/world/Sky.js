@@ -20,6 +20,10 @@ export const PALETTE = {
 export class Sky {
   constructor(scene) {
     this.group = new THREE.Group();
+    // night-shift targets (dusk → night over a long run)
+    this._nightHorizon = new THREE.Color(0x5a2e5e); // bruised violet
+    this._nightMid = new THREE.Color(0x141f38);
+    this._nightTop = new THREE.Color(0x050b16);
 
     // Gradient dome — custom shader: 3-stop vertical gradient + sun disc + glow
     const geo = new THREE.SphereGeometry(420, 32, 24);
@@ -118,8 +122,14 @@ export class Sky {
     return s;
   }
 
-  update(dt) {
+  update(dt, nightT = 0) {
     this.skyMat.uniforms.time.value += dt;
+    // long-run progression: dusk slowly deepens toward night over ~4 min
+    const u = this.skyMat.uniforms;
+    u.horizon.value.copy(PALETTE.horizon).lerp(this._nightHorizon, nightT * 0.6);
+    u.mid.value.copy(PALETTE.skyMid).lerp(this._nightMid, nightT * 0.45);
+    u.top.value.copy(PALETTE.skyTop).lerp(this._nightTop, nightT * 0.5);
+    u.sunGlow.value.copy(PALETTE.sunGlow).multiplyScalar(1 - nightT * 0.55);
     for (const c of this.clouds) {
       c.position.x -= c.userData.drift * dt * 0.35;
       if (c.position.x < -240) c.position.x += 480;

@@ -538,7 +538,7 @@ export class Game {
       // ---------- world update ----------
       this.track.update(simDt, runSpeed, time, st === 'running');
       this.city.update(dt, runSpeed, time);
-      this.sky.update(dt);
+      this.sky.update(dt, st === 'running' ? clamp(this.timeAlive / 240, 0, 1) : 0);
       this.sky.followCamera(this.camera.position.x);
       this.lighting.update(dt, this.player.y);
       this.camRig.enabled.shake = this.storage.settings.shake;
