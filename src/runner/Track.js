@@ -241,6 +241,7 @@ export class Track {
         deck: new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), this.mats.deck),
         fascia: new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), this.mats.edgeGlow),
         hazardBand: new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), this.mats.hazard),
+        edgeWarn: new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), this.mats.hazard),
         clutter: new THREE.Group(),
         clutterKind: -1,
       };
@@ -248,7 +249,7 @@ export class Track {
       p.body.receiveShadow = true;
       p.deck.castShadow = false;
       p.deck.receiveShadow = true;
-      g.add(p.body, p.deck, p.fascia, p.hazardBand, p.clutter);
+      g.add(p.body, p.deck, p.fascia, p.hazardBand, p.edgeWarn, p.clutter);
       this.group.add(g);
     }
     p.mesh.visible = true;
@@ -274,6 +275,11 @@ export class Track {
       p.hazardBand.scale.set(0.12, faceH, DECK_DEPTH - 0.5);
       p.hazardBand.position.set(x + 0.06, y - faceH / 2, 0);
     }
+    // edge warning chevron — visible by default off; _generateChunk flips it on
+    // for pads whose next segment is a gap
+    p.edgeWarn.visible = false;
+    p.edgeWarn.scale.set(0.55, 0.05, DECK_DEPTH - 0.8);
+    p.edgeWarn.position.set(x + len - 0.42, y + 0.02, 0);
     this._dressPad(p);
     return p;
   }
@@ -629,6 +635,10 @@ export class Track {
     if (this.distance > 90 && Math.random() < (tier >= 2 ? 0.3 : 0.18)) {
       gapLen = tier >= 3 ? rand(3, 6.5) : rand(2.2, 4.5);
       gapLen = Math.min(gapLen, speed * 0.55); // never wider than a jump's reach
+    }
+    if (gapLen > 0) {
+      const lastPad = this.pads[this.pads.length - 1];
+      if (lastPad) lastPad.edgeWarn.visible = true; // "edge — gap next"
     }
 
     this.cursor += padLen + gapLen;

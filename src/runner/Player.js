@@ -41,6 +41,7 @@ export class Player {
     }
     // rim/back lighting accent so the mech reads against dark rooftops
     this.mecha.rotation.y = Math.PI / 2; // face +X — toward oncoming obstacles (player POV: runner strides right)
+    this.mecha.scale.setScalar(1.14); // a touch bigger than authored — more presence at gameplay distance
     this.group.add(this.mecha);
     this.ready = true;
   }
@@ -89,6 +90,7 @@ export class Player {
     this.leanX = 0;
     this.invuln = 0;
     this.landEvent = 0; // set to impact vy on the landing frame
+    this._squash = 0;
     this.tumble = 0;
     if (this.group) {
       this.group.position.set(PLAYER_X, 0, 0);
@@ -239,6 +241,12 @@ export class Player {
     const speedN = clamp((ctx.speed - SPEED.start) / (SPEED.max - SPEED.start), 0, 1);
     const body = p.body;
 
+    // landing squash: hard hits compress the frame for a beat
+    if (this.landEvent) this._squash = clamp(-this.landEvent * 0.026, 0, 0.3);
+    this._squash = damp(this._squash, 0, 9, dt);
+    const sqY = 1 - this._squash;
+    const sqX = 1 + this._squash * 0.55;
+
     if (this.state === ST_RUN) {
       // stride frequency scales with speed; legs counter-swing
       this.runPhase += dt * (5.2 + speedN * 4.6);
@@ -253,7 +261,7 @@ export class Player {
       body.rotation.z = damp(body.rotation.z, 0, 8, dt);
       body.rotation.x = damp(body.rotation.x, lean, 10, dt); // pitch forward into the sprint
       body.position.y = Math.abs(c) * 0.09 + Math.abs(s) * 0.02;
-      body.scale.set(1, 1, 1);
+      body.scale.set(sqX, sqY, sqX);
       if (p.head) p.head.rotation.x = damp(p.head.rotation.x, -lean * 0.4, 8, dt); // eyes up toward the read line
       if (p.pack) p.pack.rotation.x = damp(p.pack.rotation.x, -0.1 - speedN * 0.15, 8, dt);
       if (p.wingL) {
@@ -270,7 +278,7 @@ export class Player {
       }
       body.rotation.x = damp(body.rotation.x, -0.55, 12, dt); // recline, feet-first
       body.position.y = damp(body.position.y, -0.62, 14, dt);
-      body.scale.set(1, 1, 1);
+      body.scale.set(sqX, sqY, sqX);
       if (p.head) p.head.rotation.x = damp(p.head.rotation.x, 0.5, 10, dt); // head tips up to still see ahead
     } else if (this.state === ST_AIR) {
       const rising = this.vy > 1;

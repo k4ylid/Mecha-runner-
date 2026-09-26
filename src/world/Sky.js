@@ -31,7 +31,7 @@ export class Sky {
         top: { value: PALETTE.skyTop },
         mid: { value: PALETTE.skyMid },
         horizon: { value: PALETTE.horizon },
-        sunDir: { value: new THREE.Vector3(0.55, 0.16, -0.82).normalize() },
+        sunDir: { value: new THREE.Vector3(0.5, 0.24, -0.83).normalize() },
         sunCore: { value: PALETTE.sunCore },
         sunGlow: { value: PALETTE.sunGlow },
         time: { value: 0 },
@@ -52,9 +52,9 @@ export class Sky {
           vec3 col = mix(horizon, mid, smoothstep(0.0, 0.24, y));
           col = mix(col, top, smoothstep(0.22, 0.7, y));
           float sunD = distance(vDir, sunDir);
-          float disc = smoothstep(0.045, 0.03, sunD);
-          float halo = exp(-sunD * 5.5) * 0.55;
-          col += sunCore * disc + sunGlow * halo;
+          float disc = smoothstep(0.06, 0.038, sunD);
+          float halo = exp(-sunD * 4.2) * 0.75;
+          col += sunCore * disc * 1.3 + sunGlow * halo;
           col += horizon * 0.06 * (1.0 - smoothstep(0.0, 0.3, y)) * (0.5 + 0.5 * sin(vDir.x * 40.0 + time * 0.05));
           gl_FragColor = vec4(col, 1.0);
         }

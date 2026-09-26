@@ -158,13 +158,14 @@ export class Particles {
     );
   }
 
-  jetFlare(x, y) {
+  jetFlare(x, y, tint = null) {
     const n = Math.ceil(3 * this.budget);
+    const [tr, tg, tb] = tint || [1, 0.55, 0.15];
     for (let i = 0; i < n; i++) {
       this.exhaust.emit(
         x + rand(-0.15, 0.15), y + rand(-0.1, 0.2), rand(-0.15, 0.15),
         rand(-2.5, -5), rand(-2, 1), rand(-0.5, 0.5),
-        rand(0.25, 0.5), rand(0.6, 1.1), 1, 0.55 + rand(0.3), 0.15
+        rand(0.25, 0.5), rand(0.6, 1.1), tr, tg + rand(0.3) * tg, tb
       );
     }
   }
@@ -214,14 +215,15 @@ export class Particles {
     this.dust.update(dt, worldSpeed);
     this.sparks.update(dt, worldSpeed);
     this.exhaust.update(dt, worldSpeed);
-    // ambient motes spawn constantly around the camera
+    // ambient motes — emission rate ramps with speed so the air reads faster
+    const speedN = Math.min(1, worldSpeed / 27);
     this._moteT += dt;
-    if (this._moteT > 0.08) {
+    if (this._moteT > 0.08 - speedN * 0.05) {
       this._moteT = 0;
       this.motes.emit(
         camX + rand(-15, 40), rand(-1, 14), rand(-14, 4),
-        rand(-0.4, 0.4) - worldSpeed * 0.03, rand(-0.15, 0.35), rand(-0.1, 0.1),
-        rand(3, 7), rand(0.14, 0.4), 0.5, 0.7, 0.85
+        rand(-0.4, 0.4) - worldSpeed * (0.03 + speedN * 0.05), rand(-0.15, 0.35), rand(-0.1, 0.1),
+        rand(3, 7), rand(0.14, 0.4), 0.5 + speedN * 0.3, 0.7, 0.85 + speedN * 0.15
       );
     }
     this.motes.update(dt, worldSpeed * 0.4);

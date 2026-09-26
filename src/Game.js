@@ -550,7 +550,8 @@ export class Game {
         this.particles.slideScrape(PLAYER_X, this.player.y);
       }
       if (this.player.jetT > 0 || (this.power.jet > 0 && !this.player.grounded)) {
-        this.particles.jetFlare(PLAYER_X - 0.4, this.player.y + 0.9);
+        const t = this.combo >= 8 ? [0.85, 0.5, 1] : this.combo >= 4 ? [1, 0.75, 0.2] : null;
+        this.particles.jetFlare(PLAYER_X - 0.4, this.player.y + 0.9, t); // exhaust shifts gold→violet with combo
       }
       this.hud.setDanger(this.player.y < -2);
     }
