@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>MECHA RUNNER</title>
+    <style>
+      :root {
+        --accent: #35e0ff;
+        --accent2: #ffb52e;
+        --danger: #ff4d6a;
+        --panel: rgba(8, 14, 24, 0.82);
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0; padding: 0; height: 100%; overflow: hidden;
+        background: #060a12; color: #cfe6ff;
+        font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+        -webkit-user-select: none; user-select: none;
+        touch-action: none;
+      }
+      #app { position: fixed; inset: 0; }
+      canvas { display: block; }
+
+      /* ---------- HUD ---------- */
+      #hud {
+        position: fixed; inset: 0; pointer-events: none; display: none;
+        text-shadow: 0 0 6px rgba(53, 224, 255, 0.6);
+      }
+      #hud .corner { position: absolute; padding: 14px 18px; }
+      #hud-tl { top: 0; left: 0; }
+      #hud-tr { top: 0; right: 0; text-align: right; }
+      #hud-bl { bottom: 0; left: 0; }
+      #hud-br { bottom: 0; right: 0; text-align: right; }
+      .score { font-size: 30px; font-weight: 800; letter-spacing: 2px; color: #fff; font-variant-numeric: tabular-nums; }
+      .dist { font-size: 13px; letter-spacing: 2px; opacity: 0.85; }
+      .combo { font-size: 15px; font-weight: 700; color: var(--accent2); min-height: 20px; letter-spacing: 1px; }
+      #combo-bar { width: 110px; height: 4px; background: rgba(255,255,255,0.12); margin-top: 3px; }
+      #combo-fill { height: 100%; width: 0%; background: var(--accent2); }
+      .cells { font-size: 20px; font-weight: 700; color: var(--accent); }
+      .cells .ico { font-size: 14px; vertical-align: 2px; opacity: 0.9; }
+      .cells-sub { font-size: 10px; letter-spacing: 2px; opacity: 0.7; }
+      #powerup { font-size: 13px; letter-spacing: 2px; color: var(--accent2); min-height: 18px; }
+      #speedlines-label { font-size: 10px; opacity: 0.55; letter-spacing: 2px; }
+      #announce {
+        position: absolute; top: 30%; left: 0; right: 0; text-align: center;
+        font-size: 38px; font-weight: 800; letter-spacing: 7px; color: #fff;
+        opacity: 0; transition: opacity 0.25s;
+      }
+      #announce .sub { font-size: 15px; letter-spacing: 3px; color: var(--accent2); margin-top: 6px; }
+      #hint {
+        position: absolute; bottom: 14%; left: 0; right: 0; text-align: center;
+        font-size: 15px; letter-spacing: 2px; color: var(--accent);
+        opacity: 0; transition: opacity 0.3s;
+        text-shadow: 0 0 10px rgba(53,224,255,0.7), 0 2px 4px #000;
+      }
+      #hint .key {
+        display: inline-block; border: 1px solid var(--accent); border-radius: 4px;
+        padding: 1px 8px; margin: 0 4px; font-weight: 700; background: rgba(8,14,24,0.7);
+      }
+      #fps { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 10px; opacity: 0.4; }
+      #vignette {
+        position: fixed; inset: 0; pointer-events: none; z-index: 5;
+        background: radial-gradient(ellipse at center, transparent 58%, rgba(0,0,10,0.45) 100%);
+        transition: box-shadow 0.4s;
+      }
+      #vignette.danger { animation: dangerpulse 0.8s infinite alternate; }
+      @keyframes dangerpulse {
+        from { box-shadow: inset 0 0 60px rgba(255,30,60,0); }
+        to { box-shadow: inset 0 0 120px rgba(255,30,60,0.5); }
+      }
+      #hurtflash {
+        position: fixed; inset: 0; pointer-events: none; z-index: 6;
+        background: rgba(255,40,70,0); transition: background 0.35s;
+      }
+      #hurtflash.on { background: rgba(255,40,70,0.2); transition: none; }
+
+      /* ---------- touch controls ---------- */
+      #touch-ui { position: fixed; inset: 0; z-index: 7; display: none; pointer-events: none; }
+      #touch-ui .zone {
+        position: absolute; bottom: 6%; width: 84px; height: 84px; border-radius: 50%;
+        border: 2px solid rgba(53,224,255,0.5); color: var(--accent);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; letter-spacing: 1px; background: rgba(8,14,24,0.4);
+        text-align: center;
+      }
+      #zone-jump { right: 7%; }
+      #zone-slide { left: 7%; border-color: rgba(255,181,46,0.5); color: var(--accent2); }
+
+      /* ---------- Menus ---------- */
+      .overlay {
+        position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+        background: linear-gradient(100deg, rgba(4,9,18,0.2) 0%, rgba(6,12,26,0.55) 38%, rgba(2,4,8,0.9) 68%, rgba(2,4,8,0.95) 100%);
+        z-index: 10;
+      }
+      .overlay.clear { background: rgba(2,4,8,0.55); }
+      .panel {
+        background: var(--panel); border: 1px solid rgba(53,224,255,0.35);
+        padding: 32px 44px; min-width: 400px; max-width: 620px;
+        box-shadow: 0 0 40px rgba(53,224,255,0.15);
+        backdrop-filter: blur(3px);
+        max-height: 92vh; overflow-y: auto;
+      }
+      .title {
+        font-size: 46px; font-weight: 900; letter-spacing: 9px; text-align: center;
+        background: linear-gradient(180deg, #fff, var(--accent));
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        margin-bottom: 2px; white-space: nowrap;
+      }
+      .subtitle { text-align: center; font-size: 12px; letter-spacing: 4px; color: var(--accent2); margin-bottom: 24px; }
+      .menu-list { display: flex; flex-direction: column; gap: 6px; }
+      .menu-item {
+        padding: 9px 14px; font-size: 16px; letter-spacing: 2px; cursor: pointer;
+        border-left: 3px solid transparent; user-select: none;
+      }
+      .menu-item.sel { border-left-color: var(--accent); background: rgba(53,224,255,0.08); color: #fff; }
+      .menu-item.disabled { opacity: 0.35; cursor: default; }
+      .menu-item .val { float: right; color: var(--accent2); }
+      .foot { margin-top: 20px; font-size: 11px; opacity: 0.55; text-align: center; letter-spacing: 1px; line-height: 1.7; }
+      .remap-row { display: flex; justify-content: space-between; padding: 6px 4px; font-size: 14px; }
+      .remap-row .key { color: var(--accent2); font-weight: 600; }
+      .remap-row.listening .key { color: var(--danger); animation: blink 0.6s infinite alternate; }
+      @keyframes blink { from { opacity: 1; } to { opacity: 0.4; } }
+      h2.panel-h { font-size: 18px; letter-spacing: 4px; color: var(--accent); margin: 0 0 14px; text-align: center; }
+      .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 28px; margin: 14px 0; font-size: 14px; }
+      .stat-grid .k { opacity: 0.65; letter-spacing: 1px; }
+      .stat-grid .v { text-align: right; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+      .stat-grid .v.newbest { color: var(--accent2); text-shadow: 0 0 12px rgba(255,181,46,0.7); }
+      .mission-row { display: flex; justify-content: space-between; gap: 16px; padding: 7px 4px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+      .mission-row .m-prog { color: var(--accent2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .mission-row.done .m-name { color: #2eff8f; }
+      .mission-row.done .m-prog { color: #2eff8f; }
+      #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; z-index: 20; background: #060a12; }
+      #loading .title { font-size: 32px; }
+      .spin { width: 40px; height: 40px; border: 3px solid rgba(53,224,255,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin-top: 20px; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .big-announce {
+        font-size: 60px; font-weight: 900; letter-spacing: 10px; color: #fff; text-align: center;
+      }
+      .newbest { color: var(--accent2); animation: bestglow 0.8s infinite alternate; }
+      @keyframes bestglow {
+        from { text-shadow: 0 0 10px rgba(255,181,46,0.4); }
+        to { text-shadow: 0 0 26px rgba(255,181,46,0.9); }
+      }
+      @media (max-width: 700px) {
+        .panel { min-width: 0; width: 94vw; padding: 22px 20px; }
+        .title { font-size: 32px; letter-spacing: 6px; }
+        .score { font-size: 24px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <div id="hud">
+      <div class="corner" id="hud-tl">
+        <div class="score" id="score">0</div>
+        <div class="dist" id="dist">0 m</div>
+        <div class="combo" id="combo"></div>
+        <div id="combo-bar"><div id="combo-fill"></div></div>
+      </div>
+      <div class="corner" id="hud-tr">
+        <div class="cells"><span class="ico">◈</span> <span id="cells">0</span></div>
+        <div class="cells-sub">ENERGY CELLS</div>
+        <div id="powerup"></div>
+      </div>
+      <div class="corner" id="hud-bl">
+        <div id="speedlines-label">VELOCITY</div>
+        <div id="combo-bar" style="width:140px"><div id="speed-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#35e0ff,#ff8f2e)"></div></div>
+      </div>
+      <div class="corner" id="hud-br">
+        <div class="hiscore" id="hiscore"></div>
+      </div>
+      <div id="announce"></div>
+      <div id="hint"></div>
+      <div id="fps"></div>
+    </div>
+    <div id="touch-ui">
+      <div class="zone" id="zone-slide">SLIDE</div>
+      <div class="zone" id="zone-jump">JUMP</div>
+    </div>
+    <div id="vignette"></div>
+    <div id="hurtflash"></div>
+
+    <div id="menu-root"></div>
+
+    <div id="loading">
+      <div class="title">MECHA RUNNER</div>
+      <div class="subtitle">NEON PERIMETER</div>
+      <div class="spin"></div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
