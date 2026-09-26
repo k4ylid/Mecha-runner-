@@ -509,7 +509,7 @@ export class Game {
             this.particles.nearMissFx(PLAYER_X + 0.5, this.player.y + 1);
             this.audio.nearMiss();
             this.hud.announce('NEAR MISS', `+${SCORE.nearMiss * Math.min(this.combo, SCORE.comboMax)}`, 0.7);
-            this._pulse = 0.55; // split-second time dip sells the graze
+            if (!this.storage.settings.reduceMotion) this._pulse = 0.55; // split-second time dip sells the graze
           } else if (ev.kind === 'powerup') {
             this._applyPowerup(ev.powerup.type);
           } else if (ev.kind === 'hit' || ev.kind === 'wall') {

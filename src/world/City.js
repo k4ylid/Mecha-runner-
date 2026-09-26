@@ -421,6 +421,12 @@ export class City {
       this.foreCursor += rand(70, 130);
       this.forePoles.place(this.foreCursor, -4, rand(5.5, 7.5), 1, rand(9, 13), 1);
     }
+    this.gantryCursor -= speed * 1.35 * dt;
+    while (this.gantryCursor < SPAWN_AHEAD) {
+      this.gantryCursor += rand(55, 110);
+      this.gantries.place(this.gantryCursor, rand(9.5, 12.5), rand(6, 9), 1, 1, 1);
+    }
+    this.gantries.update(dt, speed);
     this.forePoles.update(dt, speed);
 
     // --- neon signs ---
