@@ -103,7 +103,8 @@ export class HUD {
         this._fpsVal = Math.round(this._fpsN / this._fpsAcc);
         this._fpsAcc = 0;
         this._fpsN = 0;
-        this.el.fps.textContent = `${this._fpsVal} fps`;
+        const dc = g.renderer?.info?.render?.calls ?? 0;
+        this.el.fps.textContent = `${this._fpsVal} fps · ${dc} draws`;
       }
     } else if (this.el.fps.textContent) {
       this.el.fps.textContent = '';
