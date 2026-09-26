@@ -231,6 +231,7 @@ export class Game {
     this.timeAlive = 0;
     this.nextMilestone = SCORE.milestoneEvery;
     this._deathSlowmo = 1;
+    this._pulse = 1; // near-miss time dip
     this.power = { shield: 0, magnet: 0, surge: 0, jet: 0 };
     this.hud.setDanger(false);
     this.missionList = this._buildMissions();
@@ -451,8 +452,9 @@ export class Game {
         this._deathSlowmo = Math.min(1, this._deathSlowmo + dt * 0.9);
         if (this.player.deadT > 1.35) this._gameOver();
       }
-      const simDt = dt * (st === 'dead' ? this._deathSlowmo : 1);
-      const runSpeed = st === 'dead' ? this.speed * this._deathSlowmo : this.speed;
+      this._pulse = Math.min(1, this._pulse + dt * 3.2);
+      const simDt = dt * (st === 'dead' ? this._deathSlowmo : 1) * this._pulse;
+      const runSpeed = st === 'dead' ? this.speed * this._deathSlowmo : this.speed * this._pulse;
 
       // ---------- autopilot context ----------
       const ctx = {
@@ -507,6 +509,7 @@ export class Game {
             this.particles.nearMissFx(PLAYER_X + 0.5, this.player.y + 1);
             this.audio.nearMiss();
             this.hud.announce('NEAR MISS', `+${SCORE.nearMiss * Math.min(this.combo, SCORE.comboMax)}`, 0.7);
+            this._pulse = 0.55; // split-second time dip sells the graze
           } else if (ev.kind === 'powerup') {
             this._applyPowerup(ev.powerup.type);
           } else if (ev.kind === 'hit' || ev.kind === 'wall') {

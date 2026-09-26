@@ -3,7 +3,7 @@
 // Everything is pooled/instanced — the world treadmill just shifts x.
 import * as THREE from 'three';
 import { rand, randInt, pick } from '../core/utils.js';
-import { facade, holoSign } from './Textures.js';
+import { facade, holoSign, sparkSprite } from './Textures.js';
 import { PALETTE } from './Sky.js';
 
 const KILL_X = -70;
@@ -152,6 +152,34 @@ export class City {
     );
     this.foreCursor = 30;
 
+    // ---------- aviation strobes on mid towers (pooled Points) ----------
+    this.beaconCap = Math.ceil(28 * d);
+    this.beacons = []; // {x,y,z,phase}
+    this.beaconPos = new Float32Array(this.beaconCap * 3).fill(-9999);
+    this.beaconPos2 = new Float32Array(this.beaconCap * 3).fill(-9999);
+    const mkBeacon = (pos) => {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      const m = new THREE.PointsMaterial({
+        map: sparkSprite(),
+        color: 0xff4055,
+        size: 1.5,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        sizeAttenuation: true,
+      });
+      const pts = new THREE.Points(g, m);
+      pts.frustumCulled = false;
+      this.group.add(pts);
+      return { pts, mat: m, pos };
+    };
+    this.beaconA = mkBeacon(this.beaconPos);
+    this.beaconB = mkBeacon(this.beaconPos2);
+    this.beaconB.mat.color.set(0xffb340); // amber strobe for variety
+    this._beaconT = 0;
+
     // ---------- neon signs (few live meshes, pooled) ----------
     this.signs = [];
     this.signPool = [];
@@ -195,6 +223,11 @@ export class City {
     layer.place(x, rand(-2, 3), z, w, h, w, 0, tint);
   }
 
+  _addBeacon(x, y, z) {
+    if (this.beacons.length >= this.beaconCap) return;
+    this.beacons.push({ x, y, z, alt: Math.random() < 0.5 });
+  }
+
   // Fill every layer ahead of the camera so frame one is already a city.
   _prime() {
     for (let x = -70; x < SPAWN_AHEAD + 40; x += rand(6, 14)) this._spawnFar(x);
@@ -203,6 +236,7 @@ export class City {
       const z = rand(-62, -38);
       this.midLayer.place(x, rand(-1, 4), z, rand(4, 9), h, rand(4, 8));
       if (Math.random() < 0.4) this.antennaLayer.place(x + rand(-1, 1), h + rand(-1, 3), z, 1, rand(3, 7), 1);
+      if (Math.random() < 0.35) this._addBeacon(x + rand(-1.5, 1.5), h + rand(-1, 4) + 0.8, z);
     }
     for (let x = -40; x < SPAWN_AHEAD; x += rand(5, 12) / this.density) {
       const z = rand(-15, -7);
@@ -292,9 +326,30 @@ export class City {
       if (Math.random() < 0.4) {
         this.antennaLayer.place(this.midCursor + rand(-1, 1), h + rand(-1, 3), z, 1, rand(3, 7), 1);
       }
+      if (Math.random() < 0.35) this._addBeacon(this.midCursor + rand(-1.5, 1.5), h + rand(-1, 4) + 0.8, z);
     }
     this.midLayer.update(dt, speed);
     this.antennaLayer.update(dt, speed);
+
+    // strobes: scroll with the mid layer; two pools phase-offset so they alternate
+    this._beaconT += dt;
+    for (const [pool, phase] of [[this.beaconA, 0], [this.beaconB, Math.PI]]) {
+      const flash = Math.pow(Math.max(0, Math.sin(this._beaconT * 3.1 + phase)), 18);
+      pool.mat.opacity = 0.15 + flash * 0.85;
+      pool.mat.size = 1.1 + flash * 1.5;
+    }
+    let bi = 0, bj = 0;
+    for (const b of this.beacons) {
+      b.x -= speed * 0.3 * dt;
+      const pos = b.alt ? this.beaconB.pos : this.beaconA.pos;
+      const i = b.alt ? bj++ : bi++;
+      pos[i * 3] = b.x; pos[i * 3 + 1] = b.y; pos[i * 3 + 2] = b.z;
+    }
+    this.beacons = this.beacons.filter((b) => b.x > -90);
+    for (let i = bi; i < this.beaconCap; i++) this.beaconA.pos[i * 3] = -9999;
+    for (let i = bj; i < this.beaconCap; i++) this.beaconB.pos[i * 3] = -9999;
+    this.beaconA.pts.geometry.attributes.position.needsUpdate = true;
+    this.beaconB.pts.geometry.attributes.position.needsUpdate = true;
 
     // --- near props: clutter between the track and mid city ---
     this.nearCursor -= speed * 0.85 * dt;
