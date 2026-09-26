@@ -95,7 +95,8 @@ export class HUD {
       if (this._hintT <= 0) this.el.hint.style.opacity = '0';
     }
 
-    // fps
+    // fps + draw calls (dev counter)
+    this.showFps = !!g.storage?.settings?.showFps;
     if (this.showFps) {
       this._fpsAcc += dt;
       this._fpsN++;
