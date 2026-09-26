@@ -206,6 +206,34 @@ export class City {
       this.searchlights.push(beam);
     }
 
+    // ---------- sky traffic: patrol gliders crossing high (silhouette + nav light) ----------
+    this.gliders = [];
+    const gliderMat = new THREE.MeshStandardMaterial({ color: 0x10161f, metalness: 0.5, roughness: 0.6 });
+    for (let i = 0; i < 3; i++) {
+      const g = new THREE.Group();
+      const hull = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.5, 1), gliderMat);
+      const wing = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.14, 4.6), gliderMat);
+      const tail = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.9, 0.5), gliderMat);
+      tail.position.set(1.1, 0.45, 0);
+      const navL = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 5),
+        new THREE.MeshBasicMaterial({ color: 0xff4055, fog: false }));
+      navL.position.set(0, 0.05, -2.35);
+      const navR = new THREE.Mesh(new THREE.SphereGeometry(0.12, 6, 5),
+        new THREE.MeshBasicMaterial({ color: 0x35e0ff, fog: false }));
+      navR.position.set(0, 0.05, 2.35);
+      const exhaust = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.4),
+        new THREE.MeshBasicMaterial({ color: 0xff8f2e, fog: false }));
+      exhaust.position.set(1.45, 0, 0);
+      g.add(hull, wing, tail, navL, navR, exhaust);
+      g.userData = {
+        x: i === 0 ? rand(-80, 10) : -200 - i * 140, y: rand(16, 30), z: rand(-75, -55),
+        speedMul: rand(0.12, 0.22), bob: rand(0, Math.PI * 2),
+      };
+      g.visible = false;
+      this.group.add(g);
+      this.gliders.push(g);
+    }
+
     // ---------- crane silhouettes (event landmarks) ----------
     this.cranes = [];
     this.craneCursor = 160;
@@ -330,6 +358,21 @@ export class City {
     }
     this.midLayer.update(dt, speed);
     this.antennaLayer.update(dt, speed);
+
+    // patrol gliders drift past the skyline
+    for (const gl of this.gliders) {
+      gl.userData.x -= speed * gl.userData.speedMul * dt + 1.2 * dt;
+      if (gl.userData.x < -160) {
+        gl.userData.x = SPAWN_AHEAD + rand(20, 140);
+        gl.userData.y = rand(16, 30);
+        gl.userData.z = rand(-75, -55);
+        gl.userData.speedMul = rand(0.12, 0.22);
+      }
+      gl.visible = gl.userData.x < SPAWN_AHEAD + 10;
+      gl.userData.bob += dt;
+      gl.position.set(gl.userData.x, gl.userData.y + Math.sin(gl.userData.bob * 0.7) * 0.6, gl.userData.z);
+      gl.rotation.z = Math.sin(gl.userData.bob * 0.5) * 0.04;
+    }
 
     // strobes: scroll with the mid layer; two pools phase-offset so they alternate
     this._beaconT += dt;
