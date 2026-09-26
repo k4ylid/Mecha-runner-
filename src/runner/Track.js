@@ -34,6 +34,7 @@ function buildMats() {
     droneShell: null, // from GLB
     prop: new THREE.MeshStandardMaterial({ color: 0x46536a, metalness: 0.6, roughness: 0.55 }),
     propDark: new THREE.MeshStandardMaterial({ color: 0x1f2836, metalness: 0.6, roughness: 0.6 }),
+    oil: new THREE.MeshStandardMaterial({ color: 0x0a1018, metalness: 0.9, roughness: 0.12, transparent: true, opacity: 0.55, envMapIntensity: 1.6, depthWrite: false }),
   };
 }
 
@@ -106,8 +107,7 @@ function makeBeamMesh(m) {
   beam.position.y = 2.62;
   const stripe = new THREE.Mesh(new THREE.BoxGeometry(2.64, 0.2, 1.44), m.hazard);
   stripe.position.y = 2.0;
-  const underGlow = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.06, 1.3), m.beamWarn);
-  underGlow.position.y = 2.06;
+  const underGlow = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.06, 1.3), m.edgeGlow); // cyan clearance line = 'slide under me'
   const cableL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 8, 5), m.prop);
   cableL.position.set(-1, 6.6, 0);
   const cableR = cableL.clone();
@@ -315,6 +315,14 @@ export class Track {
       }
       m.castShadow = true;
       p.clutter.add(m);
+    }
+    // occasional wet patch on the deck — glossy dark plane catches the sky IBL
+    if (R() < 0.4 && p.len > 14) {
+      const patch = new THREE.Mesh(new THREE.PlaneGeometry(2.4 + R() * 3, 1.4 + R() * 1.4), this.mats.oil);
+      patch.rotation.x = -Math.PI / 2;
+      patch.rotation.z = R() * Math.PI;
+      patch.position.set(p.x + 3 + R() * (p.len - 6), p.y + 0.011, -0.4 - R() * 1.4);
+      p.clutter.add(patch);
     }
   }
 
