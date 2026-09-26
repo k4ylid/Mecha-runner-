@@ -44,6 +44,8 @@ Keyboard Space/W/↑ jump (hold = higher), S/↓/Shift slide, S/↓ in air = fas
 ## Traps
 
 - Software GL renders ~1 fps — never judge gameplay by real-time visuals; use `step()`.
-- Vite HMR reloads the page on file edits — re-navigate/re-init hooks after edits.
-- `browser_console` evals fail if a JS dialog is open or the eval throws.
-- `step()` renders once at the end; on `?px=0.4` a step-batch of 8000 takes ~30–60s.
+- **Never call `step()` inside a JS loop in `browser_console`** — every call renders once, so `for(i…) step(3)` does hundreds of renders and the CDP eval times out. Use a single `step(n)` per console call (n sim frames + 1 render), or land mid-state checks between calls.
+- `browser_console` only returns a value for a **single expression** — multi-statement snippets return `undefined`. Wrap sequences in an IIFE `(()=>{ …; return JSON.stringify({…}) })()` so dispatch/step/assert run atomically with no rAF frames interleaving.
+- Vite HMR reloads the page on file edits — re-navigate/re-init hooks after edits. Reloads lose live run state but keep localStorage (best/settings/bindings persist — handy for the persistence check).
+- Chrome can crash entirely under sustained llvmpipe rendering. Relaunch with the usual flags plus `--remote-debugging-port=29229 --user-data-dir=/home/ubuntu/.browser_data_dir --use-angle=swiftshader-webgl --disable-gpu --no-sandbox` so the automation tooling reconnects.
+- `browser_console` evals fail if a JS dialog is open or the eval throws; flaky evals often mean a reload raced you — re-check `typeof __game` before assuming state.
