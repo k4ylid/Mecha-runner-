@@ -540,7 +540,9 @@ export class Game {
       // ---------- world update ----------
       this.track.update(simDt, runSpeed, time, st === 'running');
       this.city.update(dt, runSpeed, time);
-      this.sky.update(dt, st === 'running' ? clamp(this.timeAlive / 240, 0, 1) : 0);
+      const nightT = st === 'running' ? clamp(this.timeAlive / 240, 0, 1) : 0;
+      this.sky.update(dt, nightT);
+      this.scene.fog.color.copy(PALETTE.fog).lerp(_NIGHT_FOG, nightT * 0.5); // fog deepens with the sky
       this.sky.followCamera(this.camera.position.x);
       this.lighting.update(dt, this.player.y);
       this.camRig.enabled.shake = this.storage.settings.shake;

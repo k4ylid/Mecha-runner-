@@ -21,9 +21,10 @@ npm run dev                     # http://localhost:5173
 - `game.step(n, dt=1/60)` — fast-forward n simulation frames, then render once. **Essential on software-GL VMs** (~1 fps real-time). Keep n ≤ 8000 per call to avoid the browser "page unresponsive" watchdog; loop across several calls.
 - `game.autopilot = true` — self-playing bot. **Order matters**: call `game.startRun()` first, THEN set the flag (startRun resets it to false).
 - `game.lastDeath` — populated on death: `{ cause, dist, speed, py, pstate, pads, obs, apLog }`.
-- `game.setQuality('low'|'med'|'high')` / `game.applyQuality()`.
+- Quality switch: there is **no** `game.setQuality()`. Use `game.storage.settings.quality = 'low'|'med'|'high'|'auto'; game.applyQuality()` (or the Settings menu QUALITY row).
+- Remap check without UI: `game.input.bindings.jump = 'KeyF'` then `dispatchEvent(new KeyboardEvent('keydown',{code:'KeyF'}))` — press is consumed on the next `step()` frame.
 
-URL params: `?q=low|med|high` force a tier; `?px=0.4` caps pixel ratio (huge speedup on llvmpipe).
+URL params: only `?px=` is parsed (`Game._resize`) — e.g. `?px=0.4` caps pixel ratio (huge speedup on llvmpipe) but it is **ignored at boot**; it takes effect on the first `resize` event or `applyQuality()` — dispatch `window.dispatchEvent(new Event('resize'))` after load. `?q=` does not exist in code.
 
 ## Sim recipe
 
