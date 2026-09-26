@@ -11,6 +11,8 @@ export class Menus {
     this.current = null; // { items, sel, el }
     this.visible = false;
     this._remapTarget = null;
+    this._lastMouseT = 0;
+    window.addEventListener('mousemove', () => (this._lastMouseT = performance.now()));
     game.input.onRemap = () => this._renderSettings();
   }
 
@@ -36,7 +38,11 @@ export class Menus {
   _bindItems() {
     const els = this.root.querySelectorAll('.menu-item');
     els.forEach((el, i) => {
-      el.addEventListener('mouseenter', () => this._select(i));
+      // a parked cursor re-fires mouseenter on every rebuild — only honor hover
+      // when the mouse actually moved in the last heartbeat
+      el.addEventListener('mouseenter', () => {
+        if (performance.now() - this._lastMouseT < 450) this._select(i);
+      });
       el.addEventListener('click', () => this._activate(i));
     });
     const remapEls = this.root.querySelectorAll('.remap-row');

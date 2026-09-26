@@ -20,8 +20,12 @@ export class Input {
         e.preventDefault();
         const t = this._listenTarget;
         this._listenTarget = null;
-        this.bindings[t] = e.code;
-        this._saveBindings();
+        if (e.code !== 'Escape') { // Esc cancels the remap
+          const other = Object.keys(this.bindings).find((a) => a !== t && this.bindings[a] === e.code);
+          if (other) this.bindings[other] = this.bindings[t]; // conflict → swap, never dead-bind
+          this.bindings[t] = e.code;
+          this._saveBindings();
+        }
         this.onRemap && this.onRemap(t, e.code);
         return;
       }

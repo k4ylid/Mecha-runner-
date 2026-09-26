@@ -79,10 +79,11 @@ export class HUD {
     this.el.speedFill.style.width = `${speedN * 100}%`;
 
     const pw = [];
-    if (g.shield > 0) pw.push(`SHIELD ${g.shield.toFixed(0)}s`);
-    if (g.magnet > 0) pw.push(`MAGNET ${g.magnet.toFixed(0)}s`);
-    if (g.surge > 0) pw.push(`SURGE ×2 ${g.surge.toFixed(0)}s`);
-    if (g.jet > 0) pw.push(`JETSTREAM ${g.jet.toFixed(0)}s`);
+    const power = g.power || g;
+    if (power.shield > 0) pw.push(`SHIELD ${power.shield.toFixed(0)}s`);
+    if (power.magnet > 0) pw.push(`MAGNET ${power.magnet.toFixed(0)}s`);
+    if (power.surge > 0) pw.push(`SURGE ×2 ${power.surge.toFixed(0)}s`);
+    if (power.jet > 0) pw.push(`JETSTREAM ${power.jet.toFixed(0)}s`);
     this.el.powerup.textContent = pw.join('  ');
 
     // announce/hint decay

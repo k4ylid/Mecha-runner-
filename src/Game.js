@@ -94,6 +94,7 @@ export class Game {
     };
     window.addEventListener('pointerdown', unlock);
     window.addEventListener('keydown', unlock);
+    this._resize(); // applies ?px/quality sizing at boot
   }
 
   async load() {
@@ -103,6 +104,9 @@ export class Game {
   }
 
   _resolveQuality() {
+    // URL override wins over saved setting — QA/testing hook
+    const urlQ = new URLSearchParams(location.search).get('q');
+    if (urlQ && QUALITY[urlQ]) return QUALITY[urlQ];
     const q = this.storage?.settings?.quality || 'auto';
     if (q !== 'auto') return QUALITY[q];
     // auto: heuristics — mobile/small screen or weak hint → med, else high
@@ -209,7 +213,8 @@ export class Game {
     this.audio.go();
     this.camRig.startIntro();
     if (!this.storage.seenHints.jump) {
-      this.hud.hint('<span class="key">SPACE</span> JUMP — hold for higher', 3.4);
+      const jb = (this.input.bindings.jump || 'Space').replace('Key', '').replace('Arrow', '');
+      this.hud.hint(`<span class="key">${jb}</span> JUMP — hold for higher`, 3.4);
       this.storage.seenHints.jump = true;
       this.storage.save();
     }
@@ -483,8 +488,10 @@ export class Game {
           this.audio.jet();
         },
         onSlide: () => this.audio.slide(),
+        onJump: () => { this.jumps++; },
         onFall: () => this._die('LOST TO THE VOID'),
       };
+      this.player.jetPowerup = this.power.jet; // JETSTREAM: game clock drives the player's window
 
       // slide-contextual hint once
       if (st === 'running' && !this.storage.seenHints.slide) {
@@ -597,6 +604,7 @@ export class Game {
       this.hud.announce('SURGE ×2', 'double score', 1.4);
     } else if (type === 'jet') {
       this.power.jet = P.jetTime;
+      this.player.jetPowerup = P.jetTime; // player decays its own window
       this.hud.announce('JETSTREAM', 'unlimited boost', 1.4);
     }
   }

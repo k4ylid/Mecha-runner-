@@ -142,6 +142,7 @@ export class Player {
     if (this.jumpBuf > 0 && (this.grounded || this.coyote > 0)) {
       this._doJump(PHYS.jumpVel);
       this.jumpBuf = 0;
+      ctx.onJump && ctx.onJump();
     } else if (this.jumpBuf > 0 && !this.grounded && (this.jumpsLeft > 0 || this.jetPowerup > 0)) {
       // jet-boost double jump — the transform flourish
       this._doJump(PHYS.jetVel);
@@ -180,6 +181,9 @@ export class Player {
     if (!this.grounded || this.state === ST_AIR) {
       let g = PHYS.gravity;
       if (jumpHeld && this.vy > 0) g *= 0.86; // hold = floatier rise
+      // release-cut: let go early and the rise dies fast — tap = hop, hold = full arc
+      if (!jumpHeld && this.vy > 0 && this._wasHeld) this.vy *= 1 - PHYS.releaseDamp;
+      this._wasHeld = jumpHeld;
       if (wantFastFall && this.vy < 4) this.vy = Math.min(this.vy, 0) + PHYS.fastFall * dt * 3;
       this.vy += g * dt;
       this.y += this.vy * dt;
